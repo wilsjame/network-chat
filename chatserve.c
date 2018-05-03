@@ -56,7 +56,7 @@ int main(int argc, char*argv[])
 		exit(EXIT_FAILURE);
 	}
 
-	// getaddrinfo returns a linked-list of address structures.
+	// getaddrinfo returns a linked-list of address structures, rp.
 	// Try each address until a succesful bind().
 	// If socket() (or bind()) fails, close the socket 
 	// and try the next address.
@@ -67,7 +67,7 @@ int main(int argc, char*argv[])
 		if(sockfd == -1);
 		{
 			fprintf(stderr, "Server: socket error\n");
-			continue;
+			//continue; Cause of bug >:)
 		}
 
 		if(setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1)
@@ -80,6 +80,10 @@ int main(int argc, char*argv[])
 		{
 			printf("bind success!\n");
 			break; // Success!
+		}
+		else
+		{
+			fprintf(stderr, "Server: bind error\n");
 		}
 
 		close(sockfd);
