@@ -113,8 +113,8 @@ int main(int argc, char*argv[])
 
 		buffer[bytesReceived] = '\0';
 
-		// Parse client response for quit keyword
-		if(quitIn(buffer))
+		// Parse client response for '/quit' keyword
+		if(bytesReceived > 5 && quitIn(buffer))
 		{
 			close(sockfd);
 		}
@@ -141,21 +141,21 @@ bool quitIn(char* buffer)
 {
 	int itr = 0;
 
-	do
+	while(buffer[itr] != '\0');
 	{
 		if(buffer[itr] == '/')
 		{
 
-			if(buffer[itr] == 'q')
+			if(buffer[++itr] == 'q')
 			{
 
-				if(buffer[itr] == 'u')
+				if(buffer[++itr] == 'u')
 				{
 
-					if(buffer[itr] == 'i')
+					if(buffer[++itr] == 'i')
 					{
 
-						if(buffer[itr] == 't')
+						if(buffer[++itr] == 't')
 						{
 
 							return true;
@@ -170,7 +170,7 @@ bool quitIn(char* buffer)
 
 		}
 
-	}while(buffer[itr] != '\0');
+	}
 
 	return false;
 
