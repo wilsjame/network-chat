@@ -23,8 +23,21 @@ def main():
 	# bind port # with listening socket
 	serverSocket.bind(('', int(serverPort)))
 
-	# start listening
+	# start listening with backlog = 1
+	serverSocket.listen(1)
+	print('Server is now listening and ready to receive...')
+
 	# wait, indefinitely, for client to come knocking
+	while True:
+
+		# addr is address bound to the (client's)
+		# socket on the other end of the connection
+		connectionSocket, addr = serverSocket.accept()
+
+		# encode string into bytes and send
+		message = 'Hello from ' + handle + '!'
+		connectionSocket.send(message.encode())
+
 	# give incoming client their own connection socket
 	# chat!
 	#	prepend handle
