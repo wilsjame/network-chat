@@ -1,2 +1,2 @@
-all: chatserve.c
-	gcc -Wall -o chatserve chatserve.c
+all: chatclient.c
+	gcc -Wall -o chatclient chatclient.c
