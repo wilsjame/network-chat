@@ -10,36 +10,51 @@ from socket import *
 def main():
 
 	# Hard code server's handle.
-	# handle = 'Host A (server)'
+	handle = 'Host A (server)'
 	# print(handle)
 
-	# get port # from command line and convert to int
-	serverPort = input('Enter server port#: ')
-	# print('You entered ' + serverPort)
-
-	# create IPv6 TCP listening socket
-	serverSocket = socket(AF_INET6, SOCK_STREAM)
-
-	# bind port # with listening socket
-	serverSocket.bind(('', int(serverPort)))
-
-	# start listening with backlog = 1
-	serverSocket.listen(1)
-	print('Server is now listening and ready to receive...')
-
-	# wait, indefinitely, for client to come knocking
 	while True:
 
-		# addr is address bound to the (client's)
-		# socket on the other end of the connection
+		# create IPv6 TCP listening socket
+		# bind port # with listening socket
+		serverPort = input('Enter server port#: ')
+		serverSocket = socket(AF_INET6, SOCK_STREAM)
+		serverSocket.bind(('', int(serverPort)))
+
+		# start listening with backlog = 1
+		serverSocket.listen(1)
+		print('Server is now listening and ready to receive...')
+
+		# wait for client to come knocking
 		connectionSocket, addr = serverSocket.accept()
 
 		# Establish connection with client.
 		clientMessage = connectionSocket.recv(1024);
 		print(clientMessage.decode())
+		chat = True
 
-		#message = 'Server connection established.'
-		#connectionSocket.send(message.encode())
+		# Begin chatting
+		while chat:
+
+			# Send
+			message = input('>>')
+
+			if '\quit' in message:
+				chat = False
+
+			connectionSocket.send(message.encode())
+			
+			# Receive
+			if chat:
+				clientMessage = connectionSocket.recv(1024);
+				print(clientMessage.decode())
+
+				if '\quit' in clientMessage.decode():
+					print('Client closed their connection.')
+					chat = False
+
+			if chat == False:
+				connectionSocket.close()
 
 if __name__ == "__main__":
 	# execute only if run as a script

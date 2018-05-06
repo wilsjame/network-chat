@@ -18,7 +18,7 @@
 
 void printUsage();
 bool quitIn(char* buffer);
-void getHandle(char* handle);
+void getInput(char* handle);
 
 int main(int argc, char*argv[])
 {
@@ -32,7 +32,8 @@ int main(int argc, char*argv[])
 	}
 
 	char handle[HANDLESIZE];
-	getHandle(handle);
+	printf("Enter your handle: ");
+	getInput(handle);
 	
 	struct addrinfo hints;			// Fill out with relevent info
 	struct addrinfo *result, *rp;		// Will point to results
@@ -40,6 +41,7 @@ int main(int argc, char*argv[])
 	int yes = 1;
 	char buffer[MAXDATASIZE];
 	char initialMessage[] = "Client connection established.";
+	bool chat = true;
 
 	memset(&hints, 0, sizeof(hints));	// Make sure the struct is empty
 	hints.ai_family = AF_UNSPEC;		// Don't care IPv4 or IPv6
@@ -106,12 +108,11 @@ int main(int argc, char*argv[])
 
 	// *** Chat ***
 	
-	
 	// Send initial message to establish a connecion.
 	send(sockfd, initialMessage, strlen(initialMessage), 0);
 
 	// Chat with server.
-	while(true)
+	while(chat)
 	{
 
 		// Receive data from server in max-sized byte packets
@@ -124,18 +125,35 @@ int main(int argc, char*argv[])
 		buffer[bytesReceived] = '\0';
 
 		// Parse server response for '/quit' keyword
-		if(bytesReceived > 5 && quitIn(buffer))
+		if(quitIn(buffer))
 		{
 			printf("Server closed their connection\n");
+			chat = false;
 			close(sockfd);
 		}
 		else
 		{
-			// Send a reply here..?
 			printf("'%s'\n", buffer);
 		}
 
-		// Send a reply or here..?
+		// Send
+		if(chat)
+		{
+			getInput(buffer);
+
+			if(quitIn(buffer))
+			{
+				chat = false;
+			}
+
+			send(sockfd, buffer, strlen(buffer), 0);
+		}
+
+		if(!chat)
+		{
+			close(sockfd);
+			break;
+		}
 
 	}
 
@@ -152,39 +170,9 @@ void printUsage()
 // Parse buffer for quit keyword
 bool quitIn(char* buffer)
 {
-
-	int itr = 0;
-
-	while(buffer[itr] != '\0')
+	if(strstr(buffer, "\\quit") != NULL)
 	{
-
-		if(buffer[itr++] == '/')
-		{
-
-			if(buffer[itr++] == 'q')
-			{
-
-				if(buffer[itr++] == 'u')
-				{
-
-					if(buffer[itr++] == 'i')
-					{
-
-						if(buffer[itr] == 't')
-						{
-
-							return true;
-
-						}
-
-					}
-
-				}
-
-			}
-
-		}
-
+		return true;
 	}
 
 	return false;
@@ -192,7 +180,7 @@ bool quitIn(char* buffer)
 }
 
 // Gets user input and stores it in handle.
-void getHandle(char* handle)
+void getInput(char* handle)
 {
 
 	// First things first, clear handle string.
@@ -203,7 +191,7 @@ void getHandle(char* handle)
 	char* lineEntered = NULL;
 	
 	// Display prompt and then flush all open output steams. 
-	printf("Enter your handle: ");
+	printf(">> ");
 	fflush(NULL);
 
 	// By magic settings, getline() buffers automatically use malloc. 
