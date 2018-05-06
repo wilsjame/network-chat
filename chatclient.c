@@ -30,13 +30,16 @@ int main(int argc, char*argv[])
 		printUsage();
 		exit(1);
 	}
+
+	char handle[HANDLESIZE];
+	getHandle(handle);
 	
 	struct addrinfo hints;			// Fill out with relevent info
 	struct addrinfo *result, *rp;		// Will point to results
 	int sockfd, status, bytesReceived;
 	int yes = 1;
 	char buffer[MAXDATASIZE];
-	char handle[HANDLESIZE];
+	char initialMessage[] = "Client connection established.";
 
 	memset(&hints, 0, sizeof(hints));	// Make sure the struct is empty
 	hints.ai_family = AF_UNSPEC;		// Don't care IPv4 or IPv6
@@ -79,7 +82,7 @@ int main(int argc, char*argv[])
 
 		if(connect(sockfd, rp->ai_addr, rp->ai_addrlen) == 0) 
 		{
-			printf("Client: connection to server success!\n");
+			printf("Server connection established.\n");
 			break; // Success!
 		}
 		else
@@ -103,14 +106,13 @@ int main(int argc, char*argv[])
 
 	// *** Chat ***
 	
-	getHandle(handle);
+	
+	// Send initial message to establish a connecion.
+	send(sockfd, initialMessage, strlen(initialMessage), 0);
 
 	// Chat with server.
 	while(true)
 	{
-
-		// Send initial message to establish a connecion.
-
 
 		// Receive data from server in max-sized byte packets
 		if((bytesReceived = recv(sockfd, buffer, MAXDATASIZE - 1, 0)) == -1)
@@ -130,7 +132,7 @@ int main(int argc, char*argv[])
 		else
 		{
 			// Send a reply here..?
-			printf("Client: received '%s'\n", buffer);
+			printf("'%s'\n", buffer);
 		}
 
 		// Send a reply or here..?

@@ -4,18 +4,18 @@
 #** Description: chatserve.py 
 #*********************************************************************/
 
-# access socket methods without having to prepend 'socket.'
+# Access socket methods without having to prepend 'socket.'
 from socket import * 
 
 def main():
 
-	# hard code server's handle
-	handle = 'Host A (server)'
-	print(handle)
+	# Hard code server's handle.
+	# handle = 'Host A (server)'
+	# print(handle)
 
 	# get port # from command line and convert to int
-	serverPort = input('Enter server port #: ')
-	print('You entered ' + serverPort)
+	serverPort = input('Enter server port#: ')
+	# print('You entered ' + serverPort)
 
 	# create IPv6 TCP listening socket
 	serverSocket = socket(AF_INET6, SOCK_STREAM)
@@ -34,19 +34,12 @@ def main():
 		# socket on the other end of the connection
 		connectionSocket, addr = serverSocket.accept()
 
-		# encode string into bytes and send
-		message = 'Hello from ' + handle + '!'
-		connectionSocket.send(message.encode())
+		# Establish connection with client.
+		clientMessage = connectionSocket.recv(1024);
+		print(clientMessage.decode())
 
-	# give incoming client their own connection socket
-	# chat!
-	#	prepend handle
-	#	respond to host B
-	#	alternate
-	#	close connection with command "\quit"
-	# close connection socket
-	# repeat 
-	# signal handler: catch SIGINT to shutdown server
+		#message = 'Server connection established.'
+		#connectionSocket.send(message.encode())
 
 if __name__ == "__main__":
 	# execute only if run as a script
