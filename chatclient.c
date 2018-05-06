@@ -105,9 +105,12 @@ int main(int argc, char*argv[])
 	
 	getHandle(handle);
 
-	// Receive message from server
+	// Chat with server.
 	while(true)
 	{
+
+		// Send initial message to establish a connecion.
+
 
 		// Receive data from server in max-sized byte packets
 		if((bytesReceived = recv(sockfd, buffer, MAXDATASIZE - 1, 0)) == -1)
@@ -209,6 +212,9 @@ void getHandle(char* handle)
 
 	// Store user input for use in main().
 	strcpy(handle, lineEntered);
+
+	// Give it a carrot.
+	strcat(handle, ">");
 
 	// Free memory allocated by getline() (free Lil B).
 	free(lineEntered);
