@@ -10,8 +10,7 @@ from socket import *
 def main():
 
 	# Hard code server's handle.
-	handle = 'Host A (server)'
-	# print(handle)
+	handle = 'Server> '
 
 	while True:
 
@@ -37,7 +36,7 @@ def main():
 		while chat:
 
 			# Send
-			message = input('>>')
+			message = handle + input('>>')
 
 			if '\quit' in message:
 				chat = False

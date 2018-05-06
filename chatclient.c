@@ -14,7 +14,6 @@
 
 #define BACKLOG 1 // Pending connections queue will hold
 #define MAXDATASIZE 500
-#define HANDLESIZE 420
 
 void printUsage();
 bool quitIn(char* buffer);
@@ -31,15 +30,17 @@ int main(int argc, char*argv[])
 		exit(1);
 	}
 
-	char handle[HANDLESIZE];
+	char handle[MAXDATASIZE];
 	printf("Enter your handle: ");
 	getInput(handle);
+	strcat(handle, "> ");
 	
 	struct addrinfo hints;			// Fill out with relevent info
 	struct addrinfo *result, *rp;		// Will point to results
 	int sockfd, status, bytesReceived;
 	int yes = 1;
 	char buffer[MAXDATASIZE];
+	char message[MAXDATASIZE];
 	char initialMessage[] = "Client connection established.";
 	bool chat = true;
 
@@ -146,7 +147,9 @@ int main(int argc, char*argv[])
 				chat = false;
 			}
 
-			send(sockfd, buffer, strlen(buffer), 0);
+			memset(message, '\0', strlen(message));
+			sprintf(message, "%s%s", handle, buffer);
+			send(sockfd, message, strlen(message), 0);
 		}
 
 		if(!chat)
@@ -180,11 +183,11 @@ bool quitIn(char* buffer)
 }
 
 // Gets user input and stores it in handle.
-void getInput(char* handle)
+void getInput(char* buffer)
 {
 
 	// First things first, clear handle string.
-	memset(handle, '\0', HANDLESIZE);
+	memset(buffer, '\0', MAXDATASIZE);
 
 	// Magic settings. 
 	size_t bufferSize = 0;
@@ -201,10 +204,7 @@ void getInput(char* handle)
 	lineEntered[strcspn(lineEntered, "\n")] = 0;
 
 	// Store user input for use in main().
-	strcpy(handle, lineEntered);
-
-	// Give it a carrot.
-	strcat(handle, ">");
+	strcpy(buffer, lineEntered);
 
 	// Free memory allocated by getline() (free Lil B).
 	free(lineEntered);
