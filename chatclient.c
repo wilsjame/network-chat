@@ -14,9 +14,11 @@
 
 #define BACKLOG 1 // Pending connections queue will hold
 #define MAXDATASIZE 500
+#define HANDLESIZE 420
 
 void printUsage();
 bool quitIn(char* buffer);
+void getHandle(char* handle);
 
 int main(int argc, char*argv[])
 {
@@ -34,6 +36,7 @@ int main(int argc, char*argv[])
 	int sockfd, status, bytesReceived;
 	int yes = 1;
 	char buffer[MAXDATASIZE];
+	char handle[HANDLESIZE];
 
 	memset(&hints, 0, sizeof(hints));	// Make sure the struct is empty
 	hints.ai_family = AF_UNSPEC;		// Don't care IPv4 or IPv6
@@ -45,7 +48,7 @@ int main(int argc, char*argv[])
 	hints.ai_next = NULL;
 	
 	// *** Set up socket ***
-	//
+	
 	// Set up the address struct for this process (the client)
 	status = getaddrinfo(argv[1], argv[2], &hints, &result);
 
@@ -99,7 +102,9 @@ int main(int argc, char*argv[])
 	freeaddrinfo(result); 
 
 	// *** Chat ***
-	//
+	
+	getHandle(handle);
+
 	// Receive message from server
 	while(true)
 	{
@@ -113,16 +118,19 @@ int main(int argc, char*argv[])
 
 		buffer[bytesReceived] = '\0';
 
-		// Parse client response for '/quit' keyword
+		// Parse server response for '/quit' keyword
 		if(bytesReceived > 5 && quitIn(buffer))
 		{
+			printf("Server closed their connection\n");
 			close(sockfd);
 		}
 		else
 		{
-
+			// Send a reply here..?
 			printf("Client: received '%s'\n", buffer);
 		}
+
+		// Send a reply or here..?
 
 	}
 
@@ -139,23 +147,25 @@ void printUsage()
 // Parse buffer for quit keyword
 bool quitIn(char* buffer)
 {
+
 	int itr = 0;
 
-	while(buffer[itr] != '\0');
+	while(buffer[itr] != '\0')
 	{
-		if(buffer[itr] == '/')
+
+		if(buffer[itr++] == '/')
 		{
 
-			if(buffer[++itr] == 'q')
+			if(buffer[itr++] == 'q')
 			{
 
-				if(buffer[++itr] == 'u')
+				if(buffer[itr++] == 'u')
 				{
 
-					if(buffer[++itr] == 'i')
+					if(buffer[itr++] == 'i')
 					{
 
-						if(buffer[++itr] == 't')
+						if(buffer[itr] == 't')
 						{
 
 							return true;
@@ -175,3 +185,35 @@ bool quitIn(char* buffer)
 	return false;
 
 }
+
+// Gets user input and stores it in handle.
+void getHandle(char* handle)
+{
+
+	// First things first, clear handle string.
+	memset(handle, '\0', HANDLESIZE);
+
+	// Magic settings. 
+	size_t bufferSize = 0;
+	char* lineEntered = NULL;
+	
+	// Display prompt and then flush all open output steams. 
+	printf("Enter your handle: ");
+	fflush(NULL);
+
+	// By magic settings, getline() buffers automatically use malloc. 
+	getline(&lineEntered, &bufferSize, stdin);
+
+	// Remove trailing '\n' from pressing enter. 
+	lineEntered[strcspn(lineEntered, "\n")] = 0;
+
+	// Store user input for use in main().
+	strcpy(handle, lineEntered);
+
+	// Free memory allocated by getline() (free Lil B).
+	free(lineEntered);
+
+	return;
+
+}
+
