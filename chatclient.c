@@ -1,6 +1,6 @@
 /*********************************************************************
 ** Author: James G Wilson
-** Date: 5/4/2018
+** Date: 5/6/2018
 ** Description: chatclient.c
 *********************************************************************/
 #include <stdio.h>
@@ -13,11 +13,11 @@
 #include <stdbool.h>
 
 #define BACKLOG 1 // Pending connections queue will hold
-#define MAXDATASIZE 500
+#define MAXDATASIZE 525
 
 void printUsage();
 bool quitIn(char* buffer);
-void getInput(char* handle);
+void getInput(char* buffer);
 
 int main(int argc, char*argv[])
 {
@@ -30,13 +30,13 @@ int main(int argc, char*argv[])
 		exit(1);
 	}
 
-	char handle[MAXDATASIZE];
+	char handle[25];
 	printf("Enter your handle: ");
 	getInput(handle);
 	strcat(handle, "> ");
 	
-	struct addrinfo hints;			// Fill out with relevent info
-	struct addrinfo *result, *rp;		// Will point to results
+	struct addrinfo hints;			// Fill out with relevent info.
+	struct addrinfo *result, *rp;		// Will point to results.
 	int sockfd, status, bytesReceived;
 	int yes = 1;
 	char buffer[MAXDATASIZE];
@@ -44,40 +44,37 @@ int main(int argc, char*argv[])
 	char initialMessage[] = "Client connection established.";
 	bool chat = true;
 
-	memset(&hints, 0, sizeof(hints));	// Make sure the struct is empty
-	hints.ai_family = AF_UNSPEC;		// Don't care IPv4 or IPv6
-	hints.ai_socktype = SOCK_STREAM;	// TCP stream sockets (woot!)
-	hints.ai_flags = AI_PASSIVE;		// Fill in my IP for me
-	hints.ai_protocol = 0;			// Any protocol
+	memset(&hints, 0, sizeof(hints));	// Make sure the struct is empty.
+	hints.ai_family = AF_UNSPEC;		// Don't care IPv4 or IPv6.
+	hints.ai_socktype = SOCK_STREAM;	// TCP stream sockets.
+	hints.ai_flags = AI_PASSIVE;		// Fill in my IP for me.
+	hints.ai_protocol = 0;			// Any protocol.
 	hints.ai_canonname = NULL;
 	hints.ai_addr = NULL;
 	hints.ai_next = NULL;
 	
 	// *** Set up socket ***
-	
-	// Set up the address struct for this process (the client)
-	status = getaddrinfo(argv[1], argv[2], &hints, &result);
-
-	if(status != 0)
+	// Set up the address struct for this process (the client).
+	if((status = getaddrinfo(argv[1], argv[2], &hints, &result)) != 0)
 	{
 		fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(status));
 		exit(EXIT_FAILURE);
 	}
 
-	// getaddrinfo returns a linked-list of address structures, rp.
+	// getaddrinfo() returns a linked-list of address structures, rp.
 	// Try each address until a succesful bind().
 	// If socket() (or bind()) fails, close the socket 
 	// and try the next address.
 	for(rp = result; rp != NULL; rp = rp->ai_next)
 	{
 
-		// Create socket
+		// Create socket.
 		if((sockfd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol)) == -1) 
 		{
 			fprintf(stderr, "Client: socket error\n");
 		}
 
-		// Forcefully attach socket to port
+		// Forcefully attach socket to port.
 		if(setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &yes, sizeof(int)) == -1)
 		{
 			fprintf(stderr, "Client: setsockopt error\n");
@@ -93,7 +90,7 @@ int main(int argc, char*argv[])
 			fprintf(stderr, "Client: create socket error\n");
 		}
 
-		// close bad socket and try again
+		// Close bad socket and try again.
 		close(sockfd);
 	}
 
@@ -104,19 +101,20 @@ int main(int argc, char*argv[])
 		exit(EXIT_FAILURE);
 	}
 
-	// Free the linked-list, no longer needed
+	// Free the linked-list, no longer needed.
 	freeaddrinfo(result); 
 
 	// *** Chat ***
-	
 	// Send initial message to establish a connecion.
-	send(sockfd, initialMessage, strlen(initialMessage), 0);
+	memset(message, '\0', strlen(message));
+	sprintf(message, "%s%s", handle, initialMessage);
+	send(sockfd, message, strlen(message), 0);
 
 	// Chat with server.
 	while(chat)
 	{
 
-		// Receive data from server in max-sized byte packets
+		// Receive message from server in max-sized byte packets.
 		if((bytesReceived = recv(sockfd, buffer, MAXDATASIZE - 1, 0)) == -1)
 		{
 			fprintf(stderr, "Client: receive error");
@@ -125,7 +123,7 @@ int main(int argc, char*argv[])
 
 		buffer[bytesReceived] = '\0';
 
-		// Parse server response for '/quit' keyword
+		// Parse server response for '/quit' keyword.
 		if(quitIn(buffer))
 		{
 			printf("Server closed their connection\n");
@@ -137,7 +135,7 @@ int main(int argc, char*argv[])
 			printf("'%s'\n", buffer);
 		}
 
-		// Send
+		// Send message to client.
 		if(chat)
 		{
 			getInput(buffer);
@@ -164,13 +162,13 @@ int main(int argc, char*argv[])
 
 }
 
-// Print command line argument format
+// Print command line argument format.
 void printUsage()
 { 
 	printf("Usage ./chatclient <server-hostname> <port#>\n");
 }
 
-// Parse buffer for quit keyword
+// Parse buffer for quit keyword.
 bool quitIn(char* buffer)
 {
 	if(strstr(buffer, "\\quit") != NULL)
@@ -182,12 +180,12 @@ bool quitIn(char* buffer)
 
 }
 
-// Gets user input and stores it in handle.
+// Get user input and store it in buffer.
 void getInput(char* buffer)
 {
 
 	// First things first, clear handle string.
-	memset(buffer, '\0', MAXDATASIZE);
+	memset(buffer, '\0', strlen(buffer));
 
 	// Magic settings. 
 	size_t bufferSize = 0;

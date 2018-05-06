@@ -1,6 +1,6 @@
 #/*********************************************************************
 #** Author: James G Wilson
-#** Date: 5/4/2018
+#** Date: 5/6/2018
 #** Description: chatserve.py 
 #*********************************************************************/
 
@@ -12,19 +12,20 @@ def main():
 	# Hard code server's handle.
 	handle = 'Server> '
 
+	# Keep server alive until SIGINT received.
 	while True:
 
-		# create IPv6 TCP listening socket
-		# bind port # with listening socket
+		# Create IPv6 TCP listening socket.
+		# Bind port # with listening socket.
 		serverPort = input('Enter server port#: ')
 		serverSocket = socket(AF_INET6, SOCK_STREAM)
 		serverSocket.bind(('', int(serverPort)))
 
-		# start listening with backlog = 1
+		# Start listening with backlog = 1.
 		serverSocket.listen(1)
 		print('Server is now listening and ready to receive...')
 
-		# wait for client to come knocking
+		# Wait for client to come knocking.
 		connectionSocket, addr = serverSocket.accept()
 
 		# Establish connection with client.
@@ -32,18 +33,17 @@ def main():
 		print(clientMessage.decode())
 		chat = True
 
-		# Begin chatting
 		while chat:
 
-			# Send
-			message = handle + input('>>')
+			# Send message.
+			message = handle + input('>> ')
 
 			if '\quit' in message:
 				chat = False
 
 			connectionSocket.send(message.encode())
 			
-			# Receive
+			# Receive message.
 			if chat:
 				clientMessage = connectionSocket.recv(1024);
 				print(clientMessage.decode())
@@ -56,7 +56,7 @@ def main():
 				connectionSocket.close()
 
 if __name__ == "__main__":
+
 	# execute only if run as a script
 	main()
-
 
