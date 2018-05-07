@@ -16,7 +16,7 @@ def main():
 
 	# Check for correct command line syntax
 	if len(sys.argv) != 2:
-		print('Usage $ python3 chatserve.py <port#>')
+		print('Usage ./chatserve <port#>')
 		sys.exit()
 
 	# Hard code server's handle.
