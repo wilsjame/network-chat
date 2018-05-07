@@ -16,33 +16,70 @@
 #define MAXDATASIZE 525
 
 void printUsage();
+int initiateContact(char* hostname, char* port);
+void sendMessage(int sockfd, char* handle, char* buffer);
+void receiveMessage(int sockfd, char* handle, char* buffer);
 bool quitIn(char* buffer);
 void getInput(char* buffer);
 
+
 int main(int argc, char*argv[])
 {
+
+	int sockfd;
+	char handle[25];
+	char buffer[MAXDATASIZE];
+	char message[MAXDATASIZE];
+	char initialMessage[] = "Client connection established.";
 	
-	// Check command line bad usage.
-	// Only checks if the number of arguments is wrong.
+	// Check for incorrect command line usage.
 	if(argc != 3)
 	{
 		printUsage();
 		exit(1);
 	}
 
-	char handle[25];
 	printf("Enter your handle: ");
 	getInput(handle);
 	strcat(handle, "> ");
+
+	sockfd = initiateContact(argv[1], argv[2]);
 	
+	// Send initial message to establish a connecion.
+	memset(message, '\0', strlen(message));
+	sprintf(message, "%s%s", handle, initialMessage);
+	send(sockfd, message, strlen(message), 0);
+
+	// Chat with server.
+	while(true)
+	{
+
+		// Receive message from server.
+		receiveMessage(sockfd, handle, buffer);
+
+		// Send message to client.
+		sendMessage(sockfd, handle, buffer);
+	}
+
+	return 0;
+
+}
+
+// Print command line argument format.
+void printUsage()
+{ 
+	printf("Usage ./chatclient <server-hostname> <port#>\n");
+}
+
+// Does all the dirty work to set up a socket with the server.
+// Returns the successful socket file descriptor.
+int initiateContact(char* hostname, char* port)
+{
+
 	struct addrinfo hints;			// Fill out with relevent info.
 	struct addrinfo *result, *rp;		// Will point to results.
-	int sockfd, status, bytesReceived;
+	int sockfd, status;
 	int yes = 1;
-	char buffer[MAXDATASIZE];
-	char message[MAXDATASIZE];
-	char initialMessage[] = "Client connection established.";
-	bool chat = true;
 
 	memset(&hints, 0, sizeof(hints));	// Make sure the struct is empty.
 	hints.ai_family = AF_UNSPEC;		// Don't care IPv4 or IPv6.
@@ -53,9 +90,8 @@ int main(int argc, char*argv[])
 	hints.ai_addr = NULL;
 	hints.ai_next = NULL;
 	
-	// *** Set up socket ***
 	// Set up the address struct for this process (the client).
-	if((status = getaddrinfo(argv[1], argv[2], &hints, &result)) != 0)
+	if((status = getaddrinfo(hostname, port, &hints, &result)) != 0)
 	{
 		fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(status));
 		exit(EXIT_FAILURE);
@@ -104,68 +140,56 @@ int main(int argc, char*argv[])
 	// Free the linked-list, no longer needed.
 	freeaddrinfo(result); 
 
-	// *** Chat ***
-	// Send initial message to establish a connecion.
-	memset(message, '\0', strlen(message));
-	sprintf(message, "%s%s", handle, initialMessage);
-	send(sockfd, message, strlen(message), 0);
-
-	// Chat with server.
-	while(chat)
-	{
-
-		// Receive message from server in max-sized byte packets.
-		if((bytesReceived = recv(sockfd, buffer, MAXDATASIZE - 1, 0)) == -1)
-		{
-			fprintf(stderr, "Client: receive error");
-			exit(EXIT_FAILURE);
-		}
-
-		buffer[bytesReceived] = '\0';
-
-		// Parse server response for '/quit' keyword.
-		if(quitIn(buffer))
-		{
-			printf("Server closed their connection\n");
-			chat = false;
-			close(sockfd);
-		}
-		else
-		{
-			printf("'%s'\n", buffer);
-		}
-
-		// Send message to client.
-		if(chat)
-		{
-			getInput(buffer);
-
-			if(quitIn(buffer))
-			{
-				chat = false;
-			}
-
-			memset(message, '\0', strlen(message));
-			sprintf(message, "%s%s", handle, buffer);
-			send(sockfd, message, strlen(message), 0);
-		}
-
-		if(!chat)
-		{
-			close(sockfd);
-			break;
-		}
-
-	}
-
-	return 0;
+	return sockfd;
 
 }
 
-// Print command line argument format.
-void printUsage()
-{ 
-	printf("Usage ./chatclient <server-hostname> <port#>\n");
+// Get message from user and send it to the server.
+void sendMessage(int sockfd, char* handle, char* buffer)
+{
+	char message[MAXDATASIZE];
+
+	getInput(buffer);
+	memset(message, '\0', strlen(message));
+	sprintf(message, "%s%s", handle, buffer);
+	send(sockfd, message, strlen(message), 0);
+
+	if(quitIn(buffer))
+	{
+		close(sockfd);
+		exit(0);
+	}
+
+}
+
+// Receive message from the server and display it.
+void receiveMessage(int sockfd, char* handle, char* buffer)
+{
+
+	int bytesReceived;
+	memset(buffer, '\0', strlen(buffer));
+
+	// Receive message from server in max-sized byte packets.
+	if((bytesReceived = recv(sockfd, buffer, MAXDATASIZE - 1, 0)) == -1)
+	{
+		fprintf(stderr, "Client: receive error");
+		exit(EXIT_FAILURE);
+	}
+
+	buffer[bytesReceived] = '\0';
+
+	// Parse server response for '/quit' keyword.
+	if(quitIn(buffer))
+	{
+		printf("Server closed their connection\n");
+		close(sockfd);
+		exit(0);
+	}
+	else
+	{
+		printf("'%s'\n", buffer);
+	}
+
 }
 
 // Parse buffer for quit keyword.
