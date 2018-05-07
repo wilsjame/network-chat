@@ -3,58 +3,78 @@
 #** Date: 5/6/2018
 #** Description: chatserve.py 
 #*********************************************************************/
+import sys
 
 # Access socket methods without having to prepend 'socket.'
 from socket import * 
 
 def main():
 
+	# Check for correct command line syntax
+	if len(sys.argv) != 2:
+		print('Usage $ python3 chatserve.py <port#>')
+		sys.exit()
+
 	# Hard code server's handle.
 	handle = 'Server> '
 
+	serverSocket = start_up()
+
 	# Keep server alive until SIGINT received.
 	while True:
-
-		# Create IPv6 TCP listening socket.
-		# Bind port # with listening socket.
-		serverPort = input('Enter server port#: ')
-		serverSocket = socket(AF_INET6, SOCK_STREAM)
-		serverSocket.bind(('', int(serverPort)))
-
-		# Start listening with backlog = 1.
-		serverSocket.listen(1)
-		print('Server is now listening and ready to receive...')
-
+		
 		# Wait for client to come knocking.
+		print('Server is listening on port: ' + sys.argv[1])
 		connectionSocket, addr = serverSocket.accept()
 
-		# Establish connection with client.
-		clientMessage = connectionSocket.recv(1024);
-		print(clientMessage.decode())
-		chat = True
+		# Keep chat session alive until someone quits
+		while True:
 
-		while chat:
+			# Receive message.
+			receivedMsg = receive_message(connectionSocket)
+
+			if '\quit' in receivedMsg:
+				break
+
+			print(receivedMsg)
 
 			# Send message.
-			message = handle + input('>> ')
+			sentMsg = send_message(connectionSocket, handle)
 
-			if '\quit' in message:
-				chat = False
+			if '\quit' in sentMsg:
+				break
 
-			connectionSocket.send(message.encode())
-			
-			# Receive message.
-			if chat:
-				clientMessage = connectionSocket.recv(1024);
-				print(clientMessage.decode())
+		connectionSocket.close()
+		        			
+# Set up server by returning a listening socket for a client to contact.
+def start_up():
 
-				if '\quit' in clientMessage.decode():
-					print('Client closed their connection.')
-					chat = False
+	# Create IPv6 TCP listening socket.
+	# Bind port # with listening socket.
+	serverSocket = socket(AF_INET6, SOCK_STREAM)
+	serverSocket.bind(('', int(sys.argv[1])))
 
-			if chat == False:
-				connectionSocket.close()
+	# Start listening with backlog = 1.
+	serverSocket.listen(1)
+	
+	return serverSocket
 
+# Send a message to the client and 
+# return that message.
+def send_message(connectionSocket, handle):
+	message = handle + input('>> ')
+	connectionSocket.send(message.encode())
+
+	return message
+
+# Receive a message from the client and 
+# and return that message.
+def receive_message(connectionSocket):
+	clientMessage = connectionSocket.recv(1024);
+
+	return clientMessage.decode()
+
+				
 if __name__ == "__main__":
 
 	# execute only if run as a script
