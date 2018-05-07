@@ -43,3 +43,9 @@ these sources, check them out!
 - https://wiki.python.org/moin/TcpCommunication
 - gettaddrinfo(3) man page example
 
+
+NOTES:
+
+This program was tested on Oregon State University's
+Linux engineering server: flip1.engr.oregonstate.edu
+
