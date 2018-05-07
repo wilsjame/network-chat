@@ -2,6 +2,9 @@
 ** Author: James G Wilson
 ** Date: 5/6/2018
 ** Description: chatclient.c
+** 		Use in conjuctin with chatserve.py. This is is the
+**		client side of a simple chat program that uses a TCP
+**		socket to communicate over the network.
 *********************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
@@ -12,7 +15,7 @@
 #include <unistd.h>
 #include <stdbool.h>
 
-#define BACKLOG 1 // Pending connections queue will hold
+#define BACKLOG 1 // Pending connections queue will hold.
 #define MAXDATASIZE 525
 
 void printUsage();
@@ -21,7 +24,6 @@ void sendMessage(int sockfd, char* handle, char* buffer);
 void receiveMessage(int sockfd, char* handle, char* buffer);
 bool quitIn(char* buffer);
 void getInput(char* buffer);
-
 
 int main(int argc, char*argv[])
 {
@@ -72,7 +74,7 @@ void printUsage()
 }
 
 // Does all the dirty work to set up a socket with the server.
-// Returns the successful socket file descriptor.
+// Returns a successful socket file descriptor.
 int initiateContact(char* hostname, char* port)
 {
 
@@ -195,9 +197,12 @@ void receiveMessage(int sockfd, char* handle, char* buffer)
 // Parse buffer for quit keyword.
 bool quitIn(char* buffer)
 {
+
 	if(strstr(buffer, "\\quit") != NULL)
 	{
+
 		return true;
+
 	}
 
 	return false;

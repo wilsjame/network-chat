@@ -2,6 +2,9 @@
 #** Author: James G Wilson
 #** Date: 5/6/2018
 #** Description: chatserve.py 
+#**              Use in conjuction with chatclient.c. This is the 
+#**		 server side of a simple chat program that uses TCP
+#**		 sockets to communicate over the network. 
 #*********************************************************************/
 import sys
 
@@ -73,7 +76,6 @@ def receive_message(connectionSocket):
 	clientMessage = connectionSocket.recv(1024);
 
 	return clientMessage.decode()
-
 				
 if __name__ == "__main__":
 
